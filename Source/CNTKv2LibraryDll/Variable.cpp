@@ -260,6 +260,9 @@ namespace CNTK
 
     static ParameterInitializer CreateInitializer(const std::wstring& initializerTypeName, double scale, unsigned long seed) 
     {
+        if (scale <= 0) 
+            InvalidArgument("CreateInitializer: scale value for initializer '%S' cannot be 0.", initializerTypeName);
+
         Dictionary initConfig;
         initConfig[InitializerTypeAttributeName] = initializerTypeName;
         initConfig[ScaleAttributeName] = scale;
@@ -269,6 +272,9 @@ namespace CNTK
     
     static ParameterInitializer CreateInitializer(const std::wstring& initializerTypeName, double scale, int outputRank, int filterRank, unsigned long seed)
     {
+        if (scale <= 0)
+            InvalidArgument("CreateInitializer: scale value for initializer '%S' cannot be 0.", initializerTypeName);
+
         auto initConfig = CreateInitializer(initializerTypeName, scale, seed);
         initConfig[OutputRankAttributeName] = outputRank;
         initConfig[FilterRankAttributeName] = filterRank;
