@@ -82,7 +82,7 @@ void NoRandomizer::MoveToNextSequence()
 }
 
 // Gets next sequences not exceeding local and global samples.
-void NoRandomizer::GetNextSequenceDescriptions(size_t globalSampleCount, size_t localSampleCount, std::vector<SequenceDescription>& result)
+void NoRandomizer::GetNextSequenceDescriptions(size_t globalSampleCount, size_t localSampleCount, Sequences& result)
 {
     assert(globalSampleCount != 0);
     assert(localSampleCount != 0);
@@ -94,40 +94,56 @@ void NoRandomizer::GetNextSequenceDescriptions(size_t globalSampleCount, size_t 
     assert(m_sequenceWindow.size() != 0);
     assert(m_chunkDescriptions[m_currentChunkPosition]->m_numberOfSequences > m_currentSequencePositionInChunk);
 
-    size_t numGlobalSamplesLoaded = 0, numLocalSamplesLoaded = 0;
+    size_t numGlobalSamplesLoaded = 0, numLocalSamplesLoaded = 0, endOfEpochPosition = GetEndOfEpochPosition();
 
-    result.reserve(localSampleCount);
-    result.clear();
+    bool atLeastOneSequenceNeeded = true;
 
-    while (globalSampleCount > numGlobalSamplesLoaded  && localSampleCount > numLocalSamplesLoaded)
+    auto sweepIndex = m_globalSamplePosition / m_sweepSizeInSamples;
+    m_sequenceBuffer.clear();
+    for (;;)
     {
         const SequenceDescription& sequence = m_sequenceWindow[m_currentSequencePositionInChunk];
         auto sequenceLength = sequence.m_numberOfSamples;
 
         // Let's check whether we need to return this sequence or skip it.
         bool isLocal = m_globalSequencePosition % m_config.m_numberOfWorkers == m_config.m_workerRank;
-        bool enoughData = !result.empty();
 
-        // Let's check whether we need to break because we exceeded global counter.
-        if (enoughData && globalSampleCount - numGlobalSamplesLoaded < sequenceLength)
-            break;
+        if (!atLeastOneSequenceNeeded) 
+        {
+            // Break if we're exceeding the global requested sample count.
+            if (numGlobalSamplesLoaded + sequenceLength > globalSampleCount)
+                break;
 
-        // Let's check whether we need to break because we exceeded local counter.
-        if (enoughData && isLocal && localSampleCount - numLocalSamplesLoaded < sequenceLength)
+            // Break if we're exceeding the local requested sample count.
+            if (isLocal && numLocalSamplesLoaded + sequenceLength > localSampleCount)
+                break;
+        }
+        
+        if (m_globalSamplePosition >= endOfEpochPosition) 
+        {
+            result.m_endOfEpoch = true;
+            result.m_endOfSweep = (sweepIndex != (m_globalSamplePosition) / m_sweepSizeInSamples);
             break;
+        }
 
         if (isLocal) // Ok good to add it to the result.
         {
-            result.push_back(sequence);
-            numLocalSamplesLoaded += sequence.m_numberOfSamples;
+            m_sequenceBuffer.push_back(sequence);
+            numLocalSamplesLoaded += sequenceLength;
         }
 
-        numGlobalSamplesLoaded += sequence.m_numberOfSamples;
-        m_globalSamplePosition += sequence.m_numberOfSamples;
+        atLeastOneSequenceNeeded = false;
+
+        numGlobalSamplesLoaded += sequenceLength;
+        m_globalSamplePosition += sequenceLength;
         m_globalSequencePosition++;
 
         MoveToNextSequence();
     }
+
+    // Set the end-of-epoch flag (true when the current batch is last in an epoch).
+    result.m_endOfEpoch |= (m_globalSamplePosition >= endOfEpochPosition);
+    result.m_endOfSweep |= sweepIndex != m_globalSamplePosition / m_sweepSizeInSamples;
 }
 
 size_t NoRandomizer::GetCurrentSamplePosition()
@@ -144,7 +160,7 @@ Sequences NoRandomizer::GetNextSequences(size_t globalSampleCount, size_t localS
         LogicError("Local sample count must not be zero.");
 
     Sequences result;
-    size_t endOfEpochPosition = m_config.m_totalEpochSizeInSamples * (m_config.m_epochIndex + 1);
+    size_t endOfEpochPosition = GetEndOfEpochPosition();
     if (m_globalSamplePosition >= endOfEpochPosition)
     {
         result.m_endOfEpoch = true;
@@ -152,9 +168,6 @@ Sequences NoRandomizer::GetNextSequences(size_t globalSampleCount, size_t localS
             (m_globalSamplePosition % m_sweepSizeInSamples == 0);
         return result;
     }
-
-    // Check we do not go over epoch.
-    globalSampleCount = std::min(globalSampleCount, endOfEpochPosition - m_globalSamplePosition);
 
     if (!m_config.m_allowMinibatchesToCrossSweepBoundaries)
     {
@@ -167,15 +180,7 @@ Sequences NoRandomizer::GetNextSequences(size_t globalSampleCount, size_t localS
     if (globalSampleCount == 0)
         LogicError("Global sample count must not result in zero.");
 
-    auto sweepIndex = m_globalSamplePosition / m_sweepSizeInSamples;
-
-    m_sequenceBuffer.clear();
-    GetNextSequenceDescriptions(globalSampleCount, localSampleCount, m_sequenceBuffer);
-
-    // m_globalSamplePosition is already shifted in GetNextSequenceDescriptions() by the current minibatch size.
-    // Set the end-of-epoch flag (true when the current batch is last in an epoch).
-    result.m_endOfEpoch = (m_globalSamplePosition >= endOfEpochPosition);
-    result.m_endOfSweep = sweepIndex != m_globalSamplePosition / m_sweepSizeInSamples;
+    GetNextSequenceDescriptions(globalSampleCount, localSampleCount, result);
 
     if (m_sequenceBuffer.size() == 0)
     {
