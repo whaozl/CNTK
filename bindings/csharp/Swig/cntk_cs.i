@@ -7,6 +7,10 @@
 
 %include "CNTKManagedCommon.i"
 
+// Operator overloading is not supported by Python.
+// %rename(eq) operator==;
+// %rename(eq) operator==;
+
 // C# specific extenstion
 %typemap(cscode) CNTK::DeviceDescriptor %{
     public int Id
@@ -59,7 +63,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualDeviceDescriptor(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public bool Equals(DeviceDescriptor p)
@@ -71,7 +75,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualDeviceDescriptor(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public static bool operator ==(DeviceDescriptor first, DeviceDescriptor second)
@@ -89,7 +93,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualDeviceDescriptor(first, second);
+        return CNTKLib.AreEqual(first, second);
     }
 
     public static bool operator !=(DeviceDescriptor first, DeviceDescriptor second)
@@ -163,7 +167,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualAxis(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public bool Equals(Axis p)
@@ -175,7 +179,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualAxis(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public static bool operator ==(Axis first, Axis second)
@@ -193,7 +197,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualAxis(first, second);
+        return CNTKLib.AreEqual(first, second);
     }
 
     public static bool operator !=(Axis first, Axis second)
@@ -461,7 +465,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualVariable(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public bool Equals(Variable p)
@@ -473,7 +477,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualVariable(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public static bool operator ==(Variable first, Variable second)
@@ -491,7 +495,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualVariable(first, second);
+        return CNTKLib.AreEqual(first, second);
     }
 
     public static bool operator !=(Variable first, Variable second)
@@ -615,7 +619,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualShape(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public bool Equals(NDShape p)
@@ -627,7 +631,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualShape(this, p);
+        return CNTKLib.AreEqual(this, p);
     }
 
     public static bool operator ==(NDShape first, NDShape second)
@@ -645,7 +649,7 @@
         }
 
         // Return true if the fields match:
-        return CNTKLib.AreEqualShape(first, second);
+        return CNTKLib.AreEqual(first, second);
     }
 
     public static bool operator !=(NDShape first, NDShape second)
