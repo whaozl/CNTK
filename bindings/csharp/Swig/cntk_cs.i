@@ -11,17 +11,17 @@
 %typemap(cscode) CNTK::DeviceDescriptor %{
     public int Id
     {
-        get { return (int)GetId(); }
+        get { return (int)_Id(); }
     }
 
     public DeviceKind Type
     {
-        get { return GetDeviceType(); }
+        get { return _DeviceType(); }
     }
 
     public static DeviceDescriptor CPUDevice
     {
-        get { return GetCPUDevice(); }
+        get { return _CPUDevice(); }
     }
 
     public static DeviceDescriptor GPUDevice(int deviceId)
@@ -35,7 +35,7 @@
 
     public static System.Collections.Generic.IList<DeviceDescriptor> AllDevices()
     {
-        var deviceVector = GetAllDevices();
+        var deviceVector = _AllDevices();
         // The CopyTo is to ensure the elements in the deviceVector can live beyond deviceVector itself.
         var deviceArray = new DeviceDescriptor[deviceVector.Count];
         deviceVector.CopyTo(deviceArray);
@@ -99,7 +99,7 @@
 
     public override int GetHashCode()
     {
-        return this.GetDeviceType().GetHashCode();
+        return this._DeviceType().GetHashCode();
     }
 
     public static void SetExcludedDevices(System.Collections.Generic.IEnumerable<DeviceDescriptor> excluded)
@@ -119,7 +119,7 @@
     {
         get 
         {
-            return GetName();
+            return _Name();
         }
     }
 
@@ -143,7 +143,7 @@
     {
         get 
         {
-            return IsOrderedAxis();
+            return _IsOrdered();
         }
     }
 
@@ -205,7 +205,7 @@
     {
         if (this.IsDynamicAxis())
         {
-            return this.GetName().GetHashCode();
+            return this._Name().GetHashCode();
         }
         else
         {
@@ -224,7 +224,7 @@
     {
         get 
         {
-            return GetName();
+            return _Name();
         }
     }
 
@@ -232,19 +232,19 @@
     {
         get 
         {
-            return GetUid();
+            return _Uid();
         }
     }
 
     public Function RootFunction
     {
-        get { return GetRootFunction(); }
+        get { return _RootFunction(); }
     }
 
     public System.Collections.Generic.IList<Variable> Outputs
     {
         get {
-            var varVector = GetOutputs();
+            var varVector = _Outputs();
             var varArray = new Variable[varVector.Count];
             // The CopyTo is to ensure that elements in varVector live beyond the lifecycle of varVector.
             varVector.CopyTo(varArray);
@@ -255,12 +255,12 @@
 
     public Variable Output
     {
-        get { return GetOutput(); }
+        get { return _Output(); }
     }
 
     public string OpName
     {
-        get { return GetOpName(); }
+        get { return _OpName(); }
     }
 
     public bool IsComposite
@@ -281,7 +281,7 @@
     public System.Collections.Generic.IList<Variable> Arguments
     {
         get {
-            var varVector = GetArguments();
+            var varVector = _Arguments();
             var varArray = new Variable[varVector.Count];
             // The CopyTo is to ensure that elements in varVector live beyond the lifecycle of varVector.
             varVector.CopyTo(varArray);
@@ -293,7 +293,7 @@
     public System.Collections.Generic.IList<Variable> Inputs
     {
         get {
-            var varVector = GetInputs();
+            var varVector = _Inputs();
             var varArray = new Variable[varVector.Count];
             // The CopyTo is to ensure that elements in varVector live beyond the lifecycle of varVector.
             varVector.CopyTo(varArray);
@@ -380,17 +380,17 @@
 %typemap(cscode) CNTK::Variable %{
     public NDShape Shape
     {
-        get { return GetShape(); }
+        get { return _Shape(); }
     }
 
     public string Name
     {
-        get { return GetName(); }
+        get { return _Name(); }
     }
 
     public VariableKind Kind
     {
-        get { return GetVariableKind(); }
+        get { return _VariableKind(); }
     }
 
     public DataType DataType
@@ -401,7 +401,7 @@
     public System.Collections.Generic.IList<Axis> DynamicAxes
     {
         get {
-            var axisVector = GetDynamicAxes();
+            var axisVector = _DynamicAxes();
             // The CopyTo is to ensure that elements in axisVector live beyond the lifecycle of axisVector.
             var axisArray = new Axis[axisVector.Count];
             axisVector.CopyTo(axisArray);
@@ -442,7 +442,7 @@
 
     public Function Owner
     {
-        get { return GetOwner(); }
+        get { return _Owner(); }
     }
 
     public override bool Equals(System.Object obj)
@@ -502,7 +502,7 @@
     public override int GetHashCode()
     {
         // Todo: the hash value in C++ is size_t, but only in in C#
-        return (int)GetHashValue();
+        return (int)_HashValue();
     }
 %}
 
@@ -525,14 +525,14 @@
 
     public int Rank
     {
-        get { return (int)GetRank(); }
+        get { return (int)_Rank(); }
     }
 
     public System.Collections.Generic.IList<int> Dimensions
     {
         get
         {
-            var dimList = GetDimensions();
+            var dimList = _Dimensions();
             var retList = new System.Collections.Generic.List<int>(dimList.Count);
             foreach (var element in dimList)
             {
@@ -559,12 +559,12 @@
 
     public int TotalSize
     {
-        get { return (int)GetTotalSize(); }
+        get { return (int)_TotalSize(); }
     }
 
     public int this[int key]
     {
-        get { return (int)GetDimensionSize((uint)key); }
+        get { return (int)_DimensionSize((uint)key); }
     }
 
     public NDShape SubShape(int beginAxisId, int endAxisId)
@@ -656,7 +656,7 @@
     public override int GetHashCode()
     {
         //Todo: another hash function??
-        return this.GetDimensions().GetHashCode();
+        return this._Dimensions().GetHashCode();
     }
 
     public static readonly int InferredDimension = -1;
@@ -680,15 +680,15 @@
     }
 
     public int MaskedCount {
-        get { return (int)GetMaskedCount(); }
+        get { return (int)_MaskedCount(); }
     }
 
     public DeviceDescriptor Device {
-        get { return GetDevice(); }
+        get { return _Device(); }
     }
 
     public NDShape Shape {
-        get { return GetShape(); }
+        get { return _Shape(); }
     }
 
     private static SizeTVector AsSizeTVector(System.Collections.Generic.IEnumerable<int> input)
@@ -711,7 +711,7 @@
     {
         get
         {
-            return GetDevice();
+            return _Device();
         }
     }
 
@@ -735,7 +735,7 @@
     {
         get
         {
-            return GetShape();
+            return _Shape();
         }
     }
 
@@ -1344,7 +1344,7 @@
     {
         get
         {
-            return GetDevice();
+            return _Device();
         }
     }
 
@@ -1360,7 +1360,7 @@
     {
         get
         {
-            return GetShape();
+            return _Shape();
         }
     }
 
